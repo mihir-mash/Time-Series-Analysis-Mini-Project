@@ -23,7 +23,6 @@ def construct_datetime(df: pd.DataFrame) -> pd.Series:
         if dt.notna().sum() > 0:
             return dt
 
-    # If day appears to be day-of-year (common in your notebook), build from year + day + hour.
     if all(c in df.columns for c in ["year", "day", "hour"]):
         day_numeric = pd.to_numeric(df["day"], errors="coerce")
         year_numeric = pd.to_numeric(df["year"], errors="coerce")
@@ -33,7 +32,6 @@ def construct_datetime(df: pd.DataFrame) -> pd.Series:
             base = pd.to_datetime(year_numeric.astype("Int64").astype(str) + "-01-01", errors="coerce", utc=True)
             return base + pd.to_timedelta(day_numeric - 1, unit="D") + pd.to_timedelta(hour_numeric, unit="h")
 
-    # Fallback: try year + month + day + hour where month may be text (Jan, Feb, ...).
     if all(c in df.columns for c in ["year", "month", "day", "hour"]):
         m = df["month"].astype(str)
         month_map = {
@@ -68,7 +66,6 @@ def construct_datetime(df: pd.DataFrame) -> pd.Series:
         ) + pd.to_timedelta(temp["hour"], unit="h")
         return dt
 
-    # Last resort: synthetic timeline from row order.
     return pd.date_range("2020-01-01", periods=len(df), freq="h", tz="UTC")
 
 
@@ -91,7 +88,6 @@ submission = load_csv("submission.csv")
 df_raw = load_csv("data_with_time.csv")
 model_stats = load_csv("model_stats.csv")
 
-# Align output rows to anomaly flags. If notebook uses SEQ_LEN offset, infer it automatically.
 if len(df_raw) > len(submission):
     seq_len_inferred = len(df_raw) - len(submission)
     df_plot = df_raw.iloc[seq_len_inferred:].copy().reset_index(drop=True)
